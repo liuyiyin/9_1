@@ -14,8 +14,7 @@ int main()
 
 	float n1 = 0;
 	float n2 = 0;
-	float m1 = 0;
-	float m2 = 0;
+	int count = 0;
 
 	Mat gx, gy;
 	Mat mag, angle;
@@ -39,6 +38,10 @@ int main()
 	int nX = hog.cols / cellSize;
 	int nY = hog.rows / cellSize;
 
+	float h[100][8];
+	float h1[100][8];
+	float h2[100][8];
+
 	for (int a = 0; a < nX; a++) {
 		for (int b = 0; b < nY; b++) {
 			float* hist = new float[8];
@@ -47,31 +50,39 @@ int main()
 			memset(hist1, 0, sizeof(float) * 8);
 			float* hist2 = new float[8];
 			memset(hist2, 0, sizeof(float) * 8);
-			for (int i = 0; i < cellSize; ++i) {
-				for (int j = 0; j < cellSize; ++j) {
+			for (int i = 0; i < cellSize; i++) {
+				for (int j = 0; j < cellSize; j++) {
 					int c = angle.at<float>(i + 16 * a, j + 16 * b) / 45;
-					hist[c] += mag.at<float>(i + 16 * a, j + 16 * a);
+					hist[c] += mag.at<float>(i + 16 * a, j + 16 * b);
 					int d = angle1.at<float>(i + 16 * a, j + 16 * b) / 45;
-					hist1[d] += mag1.at<float>(i + 16 * a, j + 16 * a);
+					hist1[d] += mag1.at<float>(i + 16 * a, j + 16 * b);
 					int e = angle2.at<float>(i + 16 * a, j + 16 * b) / 45;
-					hist2[e] += mag2.at<float>(i + 16 * a, j + 16 * a);
+					hist2[e] += mag2.at<float>(i + 16 * a, j + 16 * b);
 				}
 			}
-			n1 = 0;
-			for (int k = 0; k < 8; k++) {
-				n1 += (hist[k] - hist1[k])*(hist[k] - hist1[k]);
+			for (int q = 0; q < 8; q++) {
+				h[count][q] = hist[q];
+				h1[count][q] = hist1[q];
+				h2[count][q] = hist2[q];
 			}
-			n2 = 0;
-			for (int k = 0; k < 8; k++) {
-				n2 += (hist[k] - hist2[k])*(hist[k] - hist2[k]);
-			}
-			m1 += sqrt(n1);
-			m2 += sqrt(n2);
+			count += 1;
 			delete[] hist;
 			delete[] hist1;
 			delete[] hist2;
 		}
 	}
+	for (int l = 0; l < nX * nY; l++) {
+		for (int k = 0; k < 8; k++) {
+			n1 += (h[l][k] - h1[l][k])*(h[l][k] - h1[l][k]);
+		}
+	}
+	for (int l = 0; l < nX * nY; l++) {
+		for (int k = 0; k < 8; k++) {
+			n2 += (h[l][k] - h2[l][k])*(h[l][k] - h2[l][k]);
+		}
+	}
+	float m1 = sqrt(n1);
+	float m2 = sqrt(n2);
 	if (m1 > m2) {
 		std::cout << "与参考图像相似度高的是img2" << std::endl;
 	}
